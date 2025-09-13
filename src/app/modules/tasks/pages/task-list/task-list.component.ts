@@ -7,6 +7,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 interface Task {
   id: number;
   title: string;
+  description: string;
+  createdAt: Date;
   completed: boolean;
 }
 
@@ -37,8 +39,20 @@ export class TaskListComponent implements OnInit {
   loadTasks() {
     // In a real app, you would load tasks from a service
     this.tasks = [
-      { id: 1, title: 'Tarea de ejemplo 1', completed: false },
-      { id: 2, title: 'Tarea de ejemplo 2', completed: true },
+      { 
+        id: 1, 
+        title: 'Tarea de ejemplo 1', 
+        description: 'Esta es una tarea de ejemplo con una descripción más detallada.',
+        createdAt: new Date('2025-09-12T10:00:00'),
+        completed: false 
+      },
+      { 
+        id: 2, 
+        title: 'Tarea completada', 
+        description: 'Esta tarea ya está completada.',
+        createdAt: new Date('2025-09-10T15:30:00'),
+        completed: true 
+      },
     ];
   }
 
@@ -48,6 +62,8 @@ export class TaskListComponent implements OnInit {
     const newTask: Task = {
       id: Date.now(),
       title: this.newTaskTitle.trim(),
+      description: '',
+      createdAt: new Date(),
       completed: false
     };
     

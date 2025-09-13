@@ -21,17 +21,42 @@
   <ul class="task-list">
     <li *ngFor="let task of tasks" class="task-item" [class.completed]="task.completed">
       <div class="task-content">
-        <input
-          type="checkbox"
-          [checked]="task.completed"
-          (change)="toggleTaskCompletion(task)"
-          class="task-checkbox"
-        />
-        <span class="task-title">{{ task.title }}</span>
+        <div class="task-checkbox-container">
+          <input
+            type="checkbox"
+            [id]="'task-' + task.id"
+            [checked]="task.completed"
+            (change)="toggleTaskCompletion(task)"
+            class="task-checkbox"
+          />
+          <label [for]="'task-' + task.id" class="task-checkbox-label"></label>
+        </div>
+        
+        <div class="task-details">
+          <div class="task-header">
+            <h3 class="task-title">{{ task.title }}</h3>
+            <div class="task-date">
+              <i class="fas fa-calendar"></i>
+              {{ task.createdAt | date:'mediumDate' }}
+              <span class="task-time">{{ task.createdAt | date:'shortTime' }}</span>
+            </div>
+          </div>
+          
+          <p class="task-description" *ngIf="task.description">
+            {{ task.description }}
+          </p>
+          
+          <div class="task-status" [class.completed]="task.completed">
+            {{ task.completed ? 'Completada' : 'Pendiente' }}
+          </div>
+        </div>
       </div>
-      <button (click)="deleteTask(task.id)" class="btn btn-delete">
-        Eliminar
-      </button>
+      
+      <div class="task-actions">
+        <button (click)="deleteTask(task.id)" class="btn btn-icon" title="Eliminar tarea">
+          <img src="assets/icons/x.png" alt="Eliminar" class="delete-icon">
+        </button>
+      </div>
     </li>
   </ul>
 
