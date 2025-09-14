@@ -4,6 +4,6 @@ Este es un task manager para gestionar tareas.
 
 ## Instrucciones
 
-Run `ng build` to build the project. 
+Ejecutar `pnpm install` para instalar las dependencias.
 
-Run `npm run start` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Ejecutar `pnpm run start` para iniciar el servidor de desarrollo. Navegar a `http://localhost:4200/`. La aplicación se recargará automáticamente si cambias algún archivo fuente.
