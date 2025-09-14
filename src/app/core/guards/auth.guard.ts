@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { map, of, switchMap } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = (route, state) => {
@@ -7,8 +8,15 @@ export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
 
   if (!authService.isAuthenticated()) {
-    router.navigate(['/login']);
-    return false;
+    return router.createUrlTree(['/login']);
   }
+  
+  // Check if user data is available
+  const user = authService.getCurrentUser();
+  if (!user) {
+    authService.logout();
+    return router.createUrlTree(['/login']);
+  }
+
   return true;
 };

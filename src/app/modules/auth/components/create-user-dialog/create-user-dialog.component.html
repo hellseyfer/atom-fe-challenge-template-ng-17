@@ -1,0 +1,35 @@
+<div class="dialog-overlay" (click)="onCancel()">
+  <div class="dialog-container" (click)="$event.stopPropagation()">
+    <h2>Crear nueva cuenta</h2>
+    
+    <p>Se creará una nueva cuenta con los siguientes datos:</p>
+    
+    <div class="user-details">
+      <p><strong>Correo electrónico:</strong> {{ email }}</p>
+      <p><strong>Contraseña:</strong> *********</p>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+    </div>
+
+    <div class="form-actions">
+      <button 
+        type="button" 
+        (click)="onCancel()" 
+        [disabled]="isLoading"
+        class="btn btn-secondary"
+    >
+      Cancelar
+    </button>
+    <button 
+      type="button" 
+      (click)="onConfirm()" 
+      [disabled]="isLoading"
+      class="btn btn-primary"
+    >
+      <span *ngIf="isLoading">Creando...</span>
+      <span *ngIf="!isLoading">Confirmar</span>
+    </button>
+  </div>
+</div>

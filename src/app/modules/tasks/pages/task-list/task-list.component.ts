@@ -2,15 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../../../core/services/auth.service';
-
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  createdAt: Date;
-  completed: boolean;
-}
+import { TaskService, Task } from '../../../../core/services/task.service';
 
 @Component({
   selector: 'app-task-list',
@@ -22,61 +16,101 @@ interface Task {
 export class TaskListComponent implements OnInit {
   tasks: Task[] = [];
   newTaskTitle: string = '';
-  userEmail: string | null = null;
+  newTaskDescription: string = '';
+  user: { id: string; email: string } | null = null;
+  isLoading = false;
+  error: string | null = null;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private taskService: TaskService,
+    private router: Router
+  ) {}
 
-  ngOnInit() {
-    if (!this.authService.isAuthenticated()) {
+  ngOnInit(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      this.user = currentUser;
+      this.loadTasks();
+    } else {
       this.router.navigate(['/login']);
-      return;
     }
-    
-    this.userEmail = this.authService.getCurrentUser();
-    this.loadTasks();
   }
 
-  loadTasks() {
-    // In a real app, you would load tasks from a service
-    this.tasks = [
-      { 
-        id: 1, 
-        title: 'Tarea de ejemplo 1', 
-        description: 'Esta es una tarea de ejemplo con una descripción más detallada.',
-        createdAt: new Date('2025-09-12T10:00:00'),
-        completed: false 
+  loadTasks(): void {
+    if (!this.user) return;
+    
+    this.isLoading = true;
+    this.taskService.getTasks()
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (tasks) => {
+          this.tasks = tasks;
+        },
+        error: (error) => {
+          console.error('Error loading tasks:', error);
+          this.error = 'Error al cargar las tareas';
+        }
+      });
+  }
+
+  addTask(): void {
+    if (!this.newTaskTitle.trim() || !this.user) return;
+    
+    this.isLoading = true;
+    this.taskService.createTask(
+      {
+        title: this.newTaskTitle,
+        description: this.newTaskDescription || ''
+      }
+    ).pipe(finalize(() => this.isLoading = false))
+    .subscribe({
+      next: (task) => {
+        this.tasks.push(task);
+        this.newTaskTitle = '';
+        this.newTaskDescription = '';
       },
-      { 
-        id: 2, 
-        title: 'Tarea completada', 
-        description: 'Esta tarea ya está completada.',
-        createdAt: new Date('2025-09-10T15:30:00'),
-        completed: true 
+      error: (error) => {
+        console.error('Error adding task:', error);
+        this.error = 'Error al agregar la tarea';
+      }
+    });
+  }
+
+  toggleTaskCompletion(task: Task): void {
+    if (!this.user) return;
+    
+    this.taskService.updateTask(
+      task.id,
+      { completed: !task.completed }
+    ).subscribe({
+      next: (updatedTask) => {
+        const index = this.tasks.findIndex(t => t.id === updatedTask.id);
+        if (index !== -1) {
+          this.tasks[index] = updatedTask;
+        }
       },
-    ];
+      error: (error) => {
+        console.error('Error updating task:', error);
+        this.error = 'Error al actualizar la tarea';
+      }
+    });
   }
 
-  addTask() {
-    if (!this.newTaskTitle.trim()) return;
+  deleteTask(taskId: string): void {
+    if (!this.user) return;
     
-    const newTask: Task = {
-      id: Date.now(),
-      title: this.newTaskTitle.trim(),
-      description: '',
-      createdAt: new Date(),
-      completed: false
-    };
-    
-    this.tasks = [newTask, ...this.tasks];
-    this.newTaskTitle = '';
-  }
-
-  toggleTaskCompletion(task: Task) {
-    task.completed = !task.completed;
-  }
-
-  deleteTask(taskId: number) {
-    this.tasks = this.tasks.filter(task => task.id !== taskId);
+    if (confirm('¿Estás seguro de que deseas eliminar esta tarea?')) {
+      this.taskService.deleteTask(taskId).subscribe({
+        next: () => {
+          this.tasks = this.tasks.filter(task => task.id !== taskId);
+        },
+        error: (error) => {
+          console.error('Error deleting task:', error);
+          this.error = 'Error al eliminar la tarea';
+        }
+      });
+    }
   }
 
   logout() {
